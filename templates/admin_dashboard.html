@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Company Issue Reporting{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h1>
+    <a href="{{ url_for('new_issue') }}" class="btn btn-primary">
+        <i class="fas fa-plus-circle me-2"></i>New Issue
+    </a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Total Issues</h6>
+                        <h2 class="mb-0">{{ issues|length }}</h2>
+                    </div>
+                    <i class="fas fa-clipboard-list fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a href="#issues" class="text-white text-decoration-none">View Details</a>
+                <i class="fas fa-angle-right text-white"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Completed</h6>
+                        <h2 class="mb-0">{{ issues|selectattr('status', 'equalto', 'completed')|list|length }}</h2>
+                    </div>
+                    <i class="fas fa-check-circle fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a href="#issues" class="text-white text-decoration-none">View Details</a>
+                <i class="fas fa-angle-right text-white"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-warning text-dark h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">In Progress</h6>
+                        <h2 class="mb-0">{{ issues|selectattr('status', 'equalto', 'in_progress')|list|length }}</h2>
+                    </div>
+                    <i class="fas fa-cog fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between text-dark">
+                <a href="#issues" class="text-dark text-decoration-none">View Details</a>
+                <i class="fas fa-angle-right text-dark"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card bg-danger text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Urgent</h6>
+                        <h2 class="mb-0">{{ issues|selectattr('status', 'equalto', 'urgent')|list|length }}</h2>
+                    </div>
+                    <i class="fas fa-exclamation-triangle fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer d-flex align-items-center justify-content-between">
+                <a href="#issues" class="text-white text-decoration-none">View Details</a>
+                <i class="fas fa-angle-right text-white"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0" id="issues"><i class="fas fa-clipboard-list me-2"></i>All Issues</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Reported By</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for issue in issues|sort(attribute='created_at', reverse=true) %}
+                            <tr>
+                                <td>{{ issue.id }}</td>
+                                <td>{{ issue.title }}</td>
+                                <td>{{ issue.location }}</td>
+                                <td>
+                                    {% if issue.status == 'pending' %}
+                                        <span class="badge bg-secondary">Pending</span>
+                                    {% elif issue.status == 'in_progress' %}
+                                        <span class="badge bg-primary">In Progress</span>
+                                    {% elif issue.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% elif issue.status == 'urgent' %}
+                                        <span class="badge bg-danger">Urgent</span>
+                                    {% else %}
+                                        <span class="badge bg-info">{{ issue.status|capitalize }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if issue.priority == 'low' %}
+                                        <span class="badge bg-info">Low</span>
+                                    {% elif issue.priority == 'medium' %}
+                                        <span class="badge bg-warning text-dark">Medium</span>
+                                    {% elif issue.priority == 'high' %}
+                                        <span class="badge bg-danger">High</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ issue.reporter.username if issue.reporter else 'Unknown' }}</td>
+                                <td>{{ issue.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <a href="{{ url_for('view_issue', issue_id=issue.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>System Users</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    {% if user.role == 'admin' %}
+                                        <span class="badge bg-danger">Admin</span>
+                                    {% elif user.role == 'operator' %}
+                                        <span class="badge bg-success">Operator</span>
+                                    {% elif user.role == 'technician' %}
+                                        <span class="badge bg-warning text-dark">Technician</span>
+                                    {% elif user.role == 'reporter' %}
+                                        <span class="badge bg-primary">Reporter</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Issue Statistics</h5>
+            </div>
+            <div class="card-body">
+                <h6>Issues by Status</h6>
+                <div class="progress mb-3" style="height: 25px;">
+                    {% set pending_count = issues|selectattr('status', 'equalto', 'pending')|list|length %}
+                    {% set in_progress_count = issues|selectattr('status', 'equalto', 'in_progress')|list|length %}
+                    {% set completed_count = issues|selectattr('status', 'equalto', 'completed')|list|length %}
+                    {% set urgent_count = issues|selectattr('status', 'equalto', 'urgent')|list|length %}
+                    {% set total = issues|length %}
+                    
+                    {% if total > 0 %}
+                        <div class="progress-bar bg-secondary" role="progressbar" style="width: {{ (pending_count / total * 100)|round|int }}%">
+                            {{ pending_count }}
+                        </div>
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ (in_progress_count / total * 100)|round|int }}%">
+                            {{ in_progress_count }}
+                        </div>
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ (completed_count / total * 100)|round|int }}%">
+                            {{ completed_count }}
+                        </div>
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: {{ (urgent_count / total * 100)|round|int }}%">
+                            {{ urgent_count }}
+                        </div>
+                    {% else %}
+                        <div class="progress-bar bg-secondary" role="progressbar" style="width: 100%">
+                            No issues
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="d-flex mb-2">
+                    <div class="pe-3"><span class="badge bg-secondary">&nbsp;</span> Pending</div>
+                    <div class="pe-3"><span class="badge bg-primary">&nbsp;</span> In Progress</div>
+                    <div class="pe-3"><span class="badge bg-success">&nbsp;</span> Completed</div>
+                    <div><span class="badge bg-danger">&nbsp;</span> Urgent</div>
+                </div>
+                
+                <h6 class="mt-4">Issues by Priority</h6>
+                <div class="progress mb-3" style="height: 25px;">
+                    {% set low_count = issues|selectattr('priority', 'equalto', 'low')|list|length %}
+                    {% set medium_count = issues|selectattr('priority', 'equalto', 'medium')|list|length %}
+                    {% set high_count = issues|selectattr('priority', 'equalto', 'high')|list|length %}
+                    
+                    {% if total > 0 %}
+                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ (low_count / total * 100)|round|int }}%">
+                            {{ low_count }}
+                        </div>
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ (medium_count / total * 100)|round|int }}%">
+                            {{ medium_count }}
+                        </div>
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: {{ (high_count / total * 100)|round|int }}%">
+                            {{ high_count }}
+                        </div>
+                    {% else %}
+                        <div class="progress-bar bg-secondary" role="progressbar" style="width: 100%">
+                            No issues
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="d-flex">
+                    <div class="pe-3"><span class="badge bg-info">&nbsp;</span> Low</div>
+                    <div class="pe-3"><span class="badge bg-warning">&nbsp;</span> Medium</div>
+                    <div><span class="badge bg-danger">&nbsp;</span> High</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{
+  "title": "User Activity",
+  "login": "logged in",
+  "logout": "logged out",
+  "register": "registered",
+  "updateProfile": "updated their profile",
+  "roleChange": "had their role changed",
+  "navigation": "navigated to",
+  "asRole": "as {{role}}",
+  "newRole": "to {{role}}",
+  "navigatedTo": "{{page}}",
+  "userMovements": "User Movements",
+  "userMovementsDescription": "Track user movements in the app",
+  "userActionsHeader": "User Actions",
+  "userActionsDescription": "Real-time notifications about user actions",
+  "viewAll": "View all activities",
+  "recentActivity": "Recent Activity",
+  "noRecentActivity": "No recent activity to display"
+}

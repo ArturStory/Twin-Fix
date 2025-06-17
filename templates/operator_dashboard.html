@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Operator Dashboard - Company Issue Reporting{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-tachometer-alt me-2"></i>Operator Dashboard</h1>
+    <a href="{{ url_for('new_issue') }}" class="btn btn-primary">
+        <i class="fas fa-plus-circle me-2"></i>New Issue
+    </a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Total Issues</h6>
+                        <h2 class="mb-0">{{ issues|length }}</h2>
+                    </div>
+                    <i class="fas fa-clipboard-list fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer">
+                <small class="text-white">All issues in the system</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-danger text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Urgent Issues</h6>
+                        <h2 class="mb-0">{{ issues|selectattr('status', 'equalto', 'urgent')|list|length }}</h2>
+                    </div>
+                    <i class="fas fa-exclamation-triangle fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer">
+                <small class="text-white">Require immediate attention</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-secondary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Pending</h6>
+                        <h2 class="mb-0">{{ issues|selectattr('status', 'equalto', 'pending')|list|length }}</h2>
+                    </div>
+                    <i class="fas fa-clock fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer">
+                <small class="text-white">Need assignment to technicians</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Resolved</h6>
+                        <h2 class="mb-0">{{ issues|selectattr('status', 'equalto', 'completed')|list|length }}</h2>
+                    </div>
+                    <i class="fas fa-check-circle fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer">
+                <small class="text-white">Successfully resolved issues</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Issues Requiring Action</h5>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-filter me-1"></i>Filter
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="filterIssues('all')">All Issues</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="filterIssues('urgent')">Urgent</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="filterIssues('pending')">Pending</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="filterIssues('in_progress')">In Progress</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="filterIssues('completed')">Completed</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="issuesTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Reported By</th>
+                                <th>Technician</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for issue in issues|sort(attribute='created_at', reverse=true) %}
+                            <tr data-status="{{ issue.status }}" data-priority="{{ issue.priority }}">
+                                <td>{{ issue.id }}</td>
+                                <td>{{ issue.title }}</td>
+                                <td>{{ issue.location }}</td>
+                                <td>
+                                    {% if issue.status == 'pending' %}
+                                        <span class="badge bg-secondary">Pending</span>
+                                    {% elif issue.status == 'in_progress' %}
+                                        <span class="badge bg-primary">In Progress</span>
+                                    {% elif issue.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% elif issue.status == 'urgent' %}
+                                        <span class="badge bg-danger">Urgent</span>
+                                    {% else %}
+                                        <span class="badge bg-info">{{ issue.status|capitalize }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if issue.priority == 'low' %}
+                                        <span class="badge bg-info">Low</span>
+                                    {% elif issue.priority == 'medium' %}
+                                        <span class="badge bg-warning text-dark">Medium</span>
+                                    {% elif issue.priority == 'high' %}
+                                        <span class="badge bg-danger">High</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ issue.reporter.username if issue.reporter else 'Unknown' }}</td>
+                                <td>
+                                    {% if issue.technician %}
+                                        {{ issue.technician.username }}
+                                    {% else %}
+                                        <span class="text-muted">Not assigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('view_issue', issue_id=issue.id) }}" class="btn btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#assignModal" data-issue-id="{{ issue.id }}" data-issue-title="{{ issue.title }}">
+                                            <i class="fas fa-user-plus"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0"><i class="fas fa-user-hard-hat me-2"></i>Technicians</h5>
+            </div>
+            <div class="card-body">
+                {% if technicians %}
+                    {% for technician in technicians %}
+                    <div class="d-flex align-items-center p-2 border-bottom">
+                        <div class="flex-shrink-0">
+                            <div class="avatar bg-light rounded-circle p-2 text-primary">
+                                <i class="fas fa-user-cog fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-0">{{ technician.username }}</h6>
+                            <small class="text-muted">{{ technician.email }}</small>
+                        </div>
+                        <div class="ms-auto">
+                            {% set assigned_count = technician.assigned_issues|length %}
+                            <span class="badge {% if assigned_count > 5 %}bg-danger{% elif assigned_count > 2 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                {{ assigned_count }} issue{% if assigned_count != 1 %}s{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>No technicians are currently registered in the system.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card shadow">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Issue Statistics</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="issueStatusChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assignment Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Assign Technician</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="" method="POST" id="assignForm">
+                <div class="modal-body">
+                    <p>Assigning technician to: <strong id="issueTitle"></strong></p>
+                    
+                    <div class="mb-3">
+                        <label for="technician_id" class="form-label">Select Technician</label>
+                        <select class="form-select" id="technician_id" name="technician_id" required>
+                            <option value="">-- Select Technician --</option>
+                            {% for technician in technicians %}
+                                <option value="{{ technician.id }}">{{ technician.username }} ({{ technician.assigned_issues|length }} assigned)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Update Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="pending">Pending</option>
+                            <option value="in_progress" selected>In Progress</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Assign Technician</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Setup modal for assignment
+    const assignModal = document.getElementById('assignModal');
+    if (assignModal) {
+        assignModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const issueId = button.getAttribute('data-issue-id');
+            const issueTitle = button.getAttribute('data-issue-title');
+            
+            document.getElementById('issueTitle').textContent = issueTitle;
+            document.getElementById('assignForm').action = `/issues/${issueId}/update`;
+        });
+    }
+    
+    // Issue filtering
+    function filterIssues(status) {
+        const table = document.getElementById('issuesTable');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        
+        for (let i = 0; i < rows.length; i++) {
+            if (status === 'all' || rows[i].getAttribute('data-status') === status) {
+                rows[i].style.display = '';
+            } else {
+                rows[i].style.display = 'none';
+            }
+        }
+    }
+    
+    // Chart for issue statistics
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('issueStatusChart').getContext('2d');
+        
+        // Calculate issue counts
+        const pendingCount = {{ issues|selectattr('status', 'equalto', 'pending')|list|length }};
+        const inProgressCount = {{ issues|selectattr('status', 'equalto', 'in_progress')|list|length }};
+        const completedCount = {{ issues|selectattr('status', 'equalto', 'completed')|list|length }};
+        const urgentCount = {{ issues|selectattr('status', 'equalto', 'urgent')|list|length }};
+        
+        const chart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Pending', 'In Progress', 'Completed', 'Urgent'],
+                datasets: [{
+                    data: [pendingCount, inProgressCount, completedCount, urgentCount],
+                    backgroundColor: ['#6c757d', '#0d6efd', '#198754', '#dc3545'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

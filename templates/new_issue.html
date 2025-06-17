@@ -1,0 +1,531 @@
+{% extends "base.html" %}
+
+{% block title %}Report New Issue - Twin Fix{% endblock %}
+
+{% block extra_css %}
+<style>
+    #map {
+        height: 300px;
+        width: 100%;
+        border-radius: 0.25rem;
+    }
+    .custom-file-upload {
+        display: inline-block;
+        cursor: pointer;
+    }
+    .preview-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .image-preview {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .image-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .remove-image {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        text-align: center;
+        line-height: 20px;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-plus-circle me-2"></i>Report New Issue</h1>
+    <a href="javascript:history.back()" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0"><i class="fas fa-clipboard me-2"></i>Issue Details</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-8">
+                    <!-- Basic Issue Information -->
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Issue Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title" required placeholder="Brief description of the issue (e.g., 'Broken Light Fixture', 'Leaking Faucet')">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Detailed Description <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="description" name="description" rows="5" required placeholder="Provide details about the maintenance issue, including when it was first noticed, what's happening, severity, and any other information that would help maintenance staff..."></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="location" class="form-label">Location <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="location" name="location" required placeholder="Floor/Room number/Area (e.g., 3rd Floor, Room 302, Kitchen)"
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="priority" class="form-label">Priority Level</label>
+                                <select class="form-select" id="priority" name="priority">
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                                <div class="form-text">High priority is for urgent safety issues only.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Location on Map <small class="text-muted">(Click to pinpoint exact location)</small></label>
+                        <div id="map" class="mb-2 border"></div>
+                        <input type="hidden" id="latitude" name="latitude">
+                        <input type="hidden" id="longitude" name="longitude">
+                        <div id="map-instructions" class="form-text text-center">
+                            <i class="fas fa-map-marker-alt me-1 text-danger"></i> Click on the map to mark the exact location
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <!-- Image Uploads -->
+                    <div class="mb-4">
+                        <label class="form-label d-block">Images <small class="text-muted">(Up to 5 images)</small></label>
+                        
+                        <!-- Camera Capture Button -->
+                        <button type="button" id="camera-btn" class="btn btn-outline-primary mb-2 w-100">
+                            <i class="fas fa-camera me-2"></i>Use Camera
+                        </button>
+                        
+                        <!-- Camera Capture Modal -->
+                        <div class="modal fade" id="cameraModal" tabindex="-1" aria-labelledby="cameraModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="cameraModalLabel">Take a Photo</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="text-center">
+                                            <video id="camera-preview" style="width: 100%; max-width: 100%; border-radius: 5px;"></video>
+                                            <canvas id="camera-canvas" style="display: none;"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer justify-content-between">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" id="capture-btn" class="btn btn-primary">
+                                            <i class="fas fa-camera me-2"></i>Capture Photo
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Regular File Upload -->
+                        <div class="input-group mb-3">
+                            <input type="file" class="form-control" id="images" name="images" accept="image/*" multiple>
+                            <label class="input-group-text" for="images">
+                                <i class="fas fa-upload"></i>
+                            </label>
+                        </div>
+                        <div class="form-text">Adding clear photos helps technicians understand the issue better.</div>
+                        <div id="previewContainer" class="preview-container"></div>
+                    </div>
+                    
+                    <!-- Additional Settings -->
+                    <div class="card bg-light border mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="fas fa-cog me-2"></i>Additional Options</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="urgent" name="urgent">
+                                <label class="form-check-label" for="urgent">
+                                    <span class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Mark as Urgent</span>
+                                </label>
+                                <div class="form-text">Only use for safety issues requiring immediate attention.</div>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="notify" name="notify" checked>
+                                <label class="form-check-label" for="notify">
+                                    <i class="fas fa-bell me-1"></i>Notify me of updates
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-top pt-3 mt-3 d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane me-2"></i>Submit Issue
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Map initialization and marker handling
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize map
+        const map = L.map('map').setView([51.505, -0.09], 13); // Default view
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Try to get user location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                map.setView([lat, lng], 15);
+            }, function() {
+                // Geolocation failed or was denied
+                console.log("Geolocation not available or denied");
+            });
+        }
+        
+        // Handle marker placement
+        let marker;
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            
+            // Remove existing marker if any
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            
+            // Add new marker
+            marker = L.marker([lat, lng]).addTo(map);
+            
+            // Update hidden form fields
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+            
+            // Update instructions
+            document.getElementById('map-instructions').innerHTML = 
+                `<i class="fas fa-check-circle me-1 text-success"></i> Location marked at [${lat.toFixed(5)}, ${lng.toFixed(5)}]`;
+        });
+    });
+    
+    // Camera capture functionality
+    let cameraStream = null;
+    let cameraModal = null;
+    const cameraBtn = document.getElementById('camera-btn');
+    const captureBtn = document.getElementById('capture-btn');
+    const cameraPreview = document.getElementById('camera-preview');
+    const cameraCanvas = document.getElementById('camera-canvas');
+    
+    // Initialize Bootstrap modal after DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Bootstrap modal
+        const modalEl = document.getElementById('cameraModal');
+        if (modalEl) {
+            cameraModal = new bootstrap.Modal(modalEl);
+            
+            // Close camera when modal is closed
+            modalEl.addEventListener('hidden.bs.modal', stopCamera);
+        } else {
+            console.error('Camera modal element not found!');
+        }
+    });
+    
+    // Open camera modal and start camera
+    cameraBtn.addEventListener('click', function() {
+        if (!cameraModal) {
+            // Try to initialize modal if it wasn't available earlier
+            const modalEl = document.getElementById('cameraModal');
+            if (modalEl) {
+                cameraModal = new bootstrap.Modal(modalEl);
+            } else {
+                alert('Camera interface not available. Please use the file upload option instead.');
+                return;
+            }
+        }
+        
+        // Check if device has camera support
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('Your browser does not support camera access. Please use the file upload option instead.');
+            return;
+        }
+        
+        // Show modal first, then access camera
+        cameraModal.show();
+        
+        // Access camera with a delay to ensure modal is fully shown
+        setTimeout(async function() {
+            try {
+                // Request camera access
+                cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' }, // Use back camera on mobile if available
+                    audio: false 
+                });
+                
+                // Display camera feed
+                cameraPreview.srcObject = cameraStream;
+                cameraPreview.play();
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                alert('Could not access camera. Please check your camera permissions or use the file upload option instead.');
+                cameraModal.hide();
+            }
+        }, 500);
+    });
+    
+    // Handle photo capture
+    captureBtn.addEventListener('click', function() {
+        if (!cameraStream) {
+            alert('Camera not initialized. Please try again.');
+            return;
+        }
+        
+        try {
+            // Set canvas dimensions to match video
+            const width = cameraPreview.videoWidth;
+            const height = cameraPreview.videoHeight;
+            cameraCanvas.width = width;
+            cameraCanvas.height = height;
+            
+            // Draw current video frame to canvas
+            const context = cameraCanvas.getContext('2d');
+            context.drawImage(cameraPreview, 0, 0, width, height);
+            
+            // Get the data URL directly from canvas
+            const dataUrl = cameraCanvas.toDataURL('image/jpeg', 0.9);
+            
+            // Create a simple object with the image data
+            if (!window.capturedImages) {
+                window.capturedImages = [];
+            }
+            
+            // Add data URL to list
+            window.capturedImages.push(dataUrl);
+            
+            // Show preview
+            const previewContainer = document.getElementById('previewContainer');
+            const previewDiv = document.createElement('div');
+            previewDiv.className = 'image-preview';
+            
+            const img = document.createElement('img');
+            img.src = dataUrl;
+            
+            const removeButton = document.createElement('div');
+            removeButton.className = 'remove-image';
+            removeButton.innerHTML = '×';
+            removeButton.addEventListener('click', function() {
+                // Remove from preview and captured images array
+                const index = window.capturedImages.indexOf(dataUrl);
+                if (index > -1) {
+                    window.capturedImages.splice(index, 1);
+                }
+                previewDiv.remove();
+            });
+            
+            previewDiv.appendChild(img);
+            previewDiv.appendChild(removeButton);
+            previewContainer.appendChild(previewDiv);
+            
+            // Stop camera and close modal
+            stopCamera();
+            if (cameraModal) {
+                cameraModal.hide();
+            }
+        } catch (err) {
+            console.error('Error capturing image:', err);
+            alert('Failed to capture image. Please try again or use the file upload option.');
+        }
+    });
+    
+    function stopCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+        }
+    }
+    
+    // Helper function to add image preview (used by both camera and file upload)
+    function addImagePreview(file) {
+        const previewContainer = document.getElementById('previewContainer');
+        
+        // Check if we already have 5 previews
+        if (previewContainer.children.length >= 5) {
+            alert('You can only upload up to 5 images');
+            return;
+        }
+        
+        // Create file reader to preview image
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const previewDiv = document.createElement('div');
+            previewDiv.className = 'image-preview';
+            
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            
+            const removeButton = document.createElement('div');
+            removeButton.className = 'remove-image';
+            removeButton.innerHTML = '×';
+            removeButton.addEventListener('click', function() {
+                previewDiv.remove();
+            });
+            
+            previewDiv.appendChild(img);
+            previewDiv.appendChild(removeButton);
+            previewContainer.appendChild(previewDiv);
+        };
+        
+        reader.readAsDataURL(file);
+        
+        // Store captured images for form submission
+        // In a production app, you would add the file to a FormData or similar
+        // For this demo, we'll store the images in a global array
+        if (!window.capturedImages) {
+            window.capturedImages = [];
+        }
+        window.capturedImages.push(file);
+    }
+    
+    // Image preview handling for file upload
+    document.getElementById('images').addEventListener('change', function(event) {
+        const previewContainer = document.getElementById('previewContainer');
+        previewContainer.innerHTML = '';
+        
+        const files = event.target.files;
+        if (files.length > 5) {
+            alert('You can only upload up to 5 images');
+            event.target.value = '';
+            return;
+        }
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            
+            // Check if the file is an image
+            if (!file.type.startsWith('image/')) {
+                continue;
+            }
+            
+            addImagePreview(file);
+        }
+    });
+    
+    // Form submit handling for urgent issues
+    document.querySelector('form').addEventListener('submit', function(event) {
+        const urgentCheckbox = document.getElementById('urgent');
+        const prioritySelect = document.getElementById('priority');
+        
+        if (urgentCheckbox.checked) {
+            // Confirm if user wants to mark as urgent
+            if (!confirm('You are marking this issue as URGENT, which should only be used for safety-critical issues requiring immediate attention. Continue?')) {
+                event.preventDefault();
+                return;
+            }
+            
+            // Automatically set priority to high if urgent
+            prioritySelect.value = 'high';
+        }
+        
+        // Handle captured images from camera
+        if (window.capturedImages && window.capturedImages.length > 0) {
+            // We need to check if the capturedImages are already in data URL format or File objects
+            const dataUrls = [];
+            const fileObjects = [];
+            
+            // Sort captured images into data URLs and File objects
+            window.capturedImages.forEach(item => {
+                if (typeof item === 'string' && item.startsWith('data:')) {
+                    // This is already a data URL
+                    dataUrls.push(item);
+                } else if (item instanceof File) {
+                    // This is a File object
+                    fileObjects.push(item);
+                }
+            });
+            
+            // If we have any File objects, convert them to data URLs
+            if (fileObjects.length > 0) {
+                // Prevent form submission until we've processed all images
+                event.preventDefault();
+                
+                // Convert each File to a data URL
+                const promises = fileObjects.map(file => {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            resolve(e.target.result);
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                });
+                
+                // After all images are converted to data URLs
+                Promise.all(promises)
+                    .then(results => {
+                        // Combine with existing data URLs
+                        const allDataUrls = [...dataUrls, ...results];
+                        
+                        // Add to form
+                        addCameraCapturesToForm(allDataUrls);
+                        
+                        // Now submit the form
+                        document.querySelector('form').submit();
+                    })
+                    .catch(error => {
+                        console.error('Error processing camera images:', error);
+                        // Add whatever data URLs we have
+                        if (dataUrls.length > 0) {
+                            addCameraCapturesToForm(dataUrls);
+                        }
+                        // Submit the form anyway
+                        document.querySelector('form').submit();
+                    });
+            } else if (dataUrls.length > 0) {
+                // We only have data URLs, add them to the form
+                event.preventDefault();
+                addCameraCapturesToForm(dataUrls);
+                document.querySelector('form').submit();
+            }
+        }
+    });
+    
+    // Helper function to add camera captures to the form
+    function addCameraCapturesToForm(dataUrls) {
+        // Create a hidden field to store camera captures
+        const cameraInput = document.createElement('input');
+        cameraInput.type = 'hidden';
+        cameraInput.name = 'camera_captures';
+        cameraInput.value = JSON.stringify(dataUrls);
+        
+        // Add to form
+        const form = document.querySelector('form');
+        form.appendChild(cameraInput);
+        
+        console.log('Added camera captures to form:', dataUrls.length);
+    }
+</script>
+{% endblock %}

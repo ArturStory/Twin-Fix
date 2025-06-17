@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Reporter Dashboard - Twin Fix{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-tachometer-alt me-2"></i>Reporter Dashboard</h1>
+    <a href="{{ url_for('new_issue') }}" class="btn btn-primary">
+        <i class="fas fa-plus-circle me-2"></i>Report New Issue
+    </a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">My Reports</h6>
+                        <h2 class="mb-0">{{ issues|length }}</h2>
+                    </div>
+                    <i class="fas fa-clipboard-list fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer">
+                <small class="text-white">Total issues you've reported</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-warning text-dark h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">In Progress</h6>
+                        <h2 class="mb-0">{{ issues|selectattr('status', 'equalto', 'in_progress')|list|length }}</h2>
+                    </div>
+                    <i class="fas fa-tools fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer">
+                <small class="text-dark">Being worked on by technicians</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-danger text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Pending</h6>
+                        <h2 class="mb-0">{{ issues|selectattr('status', 'equalto', 'pending')|list|length }}</h2>
+                    </div>
+                    <i class="fas fa-clock fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer">
+                <small class="text-white">Awaiting assignment</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Resolved</h6>
+                        <h2 class="mb-0">{{ issues|selectattr('status', 'equalto', 'completed')|list|length }}</h2>
+                    </div>
+                    <i class="fas fa-check-circle fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer">
+                <small class="text-white">Successfully resolved issues</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center bg-white py-3">
+                <h5 class="mb-0"><i class="fas fa-list-alt me-2"></i>My Reported Issues</h5>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary active" data-filter="all">All</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="pending">Pending</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="in_progress">In Progress</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="completed">Completed</button>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if issues %}
+                    <div class="table-responsive">
+                        <table class="table table-hover border" id="issuesTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th>Technician</th>
+                                    <th>Reported On</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for issue in issues|sort(attribute='created_at', reverse=true) %}
+                                <tr data-status="{{ issue.status }}">
+                                    <td>{{ issue.id }}</td>
+                                    <td>{{ issue.title }}</td>
+                                    <td>{{ issue.location }}</td>
+                                    <td>
+                                        {% if issue.status == 'pending' %}
+                                            <span class="badge bg-secondary">Pending</span>
+                                        {% elif issue.status == 'in_progress' %}
+                                            <span class="badge bg-primary">In Progress</span>
+                                        {% elif issue.status == 'completed' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif issue.status == 'urgent' %}
+                                            <span class="badge bg-danger">Urgent</span>
+                                        {% else %}
+                                            <span class="badge bg-info">{{ issue.status|capitalize }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if issue.priority == 'low' %}
+                                            <span class="badge bg-info">Low</span>
+                                        {% elif issue.priority == 'medium' %}
+                                            <span class="badge bg-warning text-dark">Medium</span>
+                                        {% elif issue.priority == 'high' %}
+                                            <span class="badge bg-danger">High</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if issue.technician %}
+                                            {{ issue.technician.username }}
+                                        {% else %}
+                                            <span class="text-muted">Not assigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ issue.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('view_issue', issue_id=issue.id) }}" class="btn btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>You haven't reported any issues yet. Use the "Report New Issue" button to submit a problem.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Issue Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="issueStatusChart" height="220"></canvas>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Quick Tips</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="fas fa-camera text-primary me-2"></i>
+                        <strong>Add photos</strong> to your reports to help technicians understand the issue better.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-map-marker-alt text-danger me-2"></i>
+                        <strong>Use the map</strong> to precisely locate issues, especially in large facilities.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-comment text-success me-2"></i>
+                        <strong>Add comments</strong> to provide additional information after submitting a report.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        <strong>Mark urgent issues</strong> to prioritize safety-critical problems.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Issue filtering
+    document.querySelectorAll('.btn-group [data-filter]').forEach(button => {
+        button.addEventListener('click', function() {
+            // Update active button
+            document.querySelectorAll('.btn-group [data-filter]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            this.classList.add('active');
+            
+            const filter = this.getAttribute('data-filter');
+            const table = document.getElementById('issuesTable');
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                if (filter === 'all' || rows[i].getAttribute('data-status') === filter) {
+                    rows[i].style.display = '';
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+        });
+    });
+
+    // Status chart
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('issueStatusChart').getContext('2d');
+        
+        // Calculate issue counts
+        const pendingCount = {{ issues|selectattr('status', 'equalto', 'pending')|list|length }};
+        const inProgressCount = {{ issues|selectattr('status', 'equalto', 'in_progress')|list|length }};
+        const completedCount = {{ issues|selectattr('status', 'equalto', 'completed')|list|length }};
+        const urgentCount = {{ issues|selectattr('status', 'equalto', 'urgent')|list|length }};
+        
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pending', 'In Progress', 'Completed', 'Urgent'],
+                datasets: [{
+                    data: [pendingCount, inProgressCount, completedCount, urgentCount],
+                    backgroundColor: ['#6c757d', '#0d6efd', '#198754', '#dc3545'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

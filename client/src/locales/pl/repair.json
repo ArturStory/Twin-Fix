@@ -1,0 +1,23 @@
+{
+  "scheduleCreatedTitle": "Zaplanowano Naprawę",
+  "scheduleCreatedMessage": "{{user}} zaplanował naprawę problemu: {{title}} na {{date}} (Status: {{status}})",
+  "scheduleChangedTitle": "Zmieniono Plan Naprawy",
+  "scheduleChangedMessage": "{{user}} zmienił termin naprawy {{title}} z {{oldDate}} na {{newDate}} (Status: {{status}})",
+  "repairCompletedTitle": "Naprawa Zakończona",
+  "repairCompletedMessage": "{{user}} zakończył naprawę {{title}} dnia {{date}} (Koszt: {{cost}})",
+  "status": {
+    "proposed": "Proponowany",
+    "confirmed": "Potwierdzony",
+    "rescheduled": "Przełożony",
+    "completed": "Zakończony",
+    "cancelled": "Anulowany"
+  },
+  "selectStatus": "Wybierz status",
+  "statusDescription": "Wybierz aktualny status tego harmonogramu naprawy",
+  "noCostProvided": "Nie podano",
+  "scheduledFor": "Zaplanowano na",
+  "rescheduledFrom": "Przełożono z",
+  "to": "na",
+  "notes": "Notatki",
+  "finalCost": "Ostateczny Koszt"
+}

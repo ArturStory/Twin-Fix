@@ -1,0 +1,108 @@
+import type { Express, Request, Response } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { z } from "zod";
+import multer from "multer";
+import path from "path";
+import express from "express";
+import { 
+  insertIssueSchema, 
+  insertCommentSchema, 
+  insertStatusChangeSchema,
+  IssueStatus, 
+  IssueType,
+  UserRole
+} from "@shared/schema";
+import repairRoutes from './routes/repair';
+import { registerMachineRoutes } from './routes/machines';
+import { registerNotificationRoutes } from './routes/notifications';
+import { setupAuth } from './auth';
+import { setupDirectAuth } from './auth-direct';
+import { registerAuthSessionRoutes } from './routes/auth-session';
+import { repairSchedulesRouter } from './routes/repair-schedules';
+import { setupWebSocketServer, eventEmitter, MessageType, broadcastToAll } from './ws-server';
+import adminRouter from './routes/admin';
+
+// Configure multer for in-memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+});
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve static images
+  app.use('/images', express.static(path.join(process.cwd(), 'static', 'images')));
+  
+  // Serve static files from the static directory (floor plans, etc.)
+  app.use('/static', express.static(path.join(process.cwd(), 'static')));
+  
+  // Serve attached assets
+  app.use('/assets', express.static(path.join(process.cwd(), 'attached_assets')));
+  
+  // Set up authentication and return middleware
+  const { isAuthenticated, hasRole, isAdmin, isOwnerOrHigher, isManagerOrHigher } = setupAuth(app);
+  
+  // Set up direct authentication routes (backup authentication system)
+  setupDirectAuth(app);
+  
+  // Register emergency authentication session routes
+  registerAuthSessionRoutes(app);
+  
+  // Clean all issues route
+  app.post('/api/clean-issues', async (req, res) => {
+    try {
+      await storage.db.execute(sql`TRUNCATE TABLE status_change, comment, image, issue RESTART IDENTITY CASCADE`);
+      
+      // Notify all clients
+      broadcastToAll({
+        type: 'data_refresh',
+        payload: {
+          message: 'All issues have been cleared',
+          timestamp: new Date().toISOString(),
+        },
+        timestamp: new Date().toISOString(),
+      });
+      
+      return res.json({ success: true, message: 'All issues cleared' });
+    } catch (error) {
+      console.error('Error clearing issues:', error);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Error clearing issues',
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Force all clients to refresh
+  app.post('/api/refresh-clients', (req, res) => {
+    broadcastToAll({
+      type: 'force_refresh',
+      payload: {
+        message: 'Server requested refresh',
+        timestamp: new Date().toISOString(),
+      },
+      timestamp: new Date().toISOString(),
+    });
+    
+    return res.json({ success: true, message: 'Refresh command sent to all clients' });
+  });
+  
+  // Register admin routes
+  app.use('/api/admin', adminRouter);
+  
+  // Register repair routes
+  app.use('/api/repairs', repairRoutes);
+  
+  // Register repair schedules routes
+  app.use('/api/repair-schedules', repairSchedulesRouter);
+  
+  // Register machine inventory routes
+  registerMachineRoutes(app);
+  
+  // Register notification routes
+  registerNotificationRoutes(app);
+
+  // Rest of your routes...

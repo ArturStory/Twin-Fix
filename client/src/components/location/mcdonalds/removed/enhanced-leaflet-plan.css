@@ -1,0 +1,261 @@
+/* Enhanced Leaflet Plan Viewer Styles */
+
+.leaflet-plan-container {
+  position: relative;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background-color: #f8fafc;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.leaflet-plan-container.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  border-radius: 0;
+  background-color: #fff;
+}
+
+.leaflet-plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  background-color: #f1f5f9;
+}
+
+.leaflet-plan-header h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.map-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.leaflet-map-container {
+  width: 100%;
+  height: 500px; /* Default height, will be overridden in JS */
+  background-color: #f1f5f9;
+}
+
+.leaflet-plan-container.fullscreen .leaflet-map-container {
+  height: calc(100vh - 3.5rem) !important;
+}
+
+/* Pin mode styling */
+.leaflet-map-container.pin-mode {
+  cursor: crosshair !important;
+}
+
+/* Coordinates display */
+.coordinates-display {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 500;
+  border: 1px solid #ccc;
+}
+
+/* Status Legend */
+.status-legend {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 500;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.status-legend h3 {
+  margin: 0 0 6px 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: block;
+}
+
+.legend-pending {
+  background-color: red;
+}
+
+.legend-in-progress {
+  background-color: orange;
+}
+
+.legend-urgent {
+  background-color: purple;
+}
+
+.legend-scheduled {
+  background-color: blue;
+}
+
+.legend-fixed {
+  background-color: green;
+}
+
+/* Issue Markers */
+.issue-marker {
+  cursor: pointer;
+}
+
+.marker-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+  border: 2px solid white;
+}
+
+.marker-red {
+  background-color: #ef4444;
+}
+
+.marker-orange {
+  background-color: #f97316;
+}
+
+.marker-blue {
+  background-color: #3b82f6;
+}
+
+.marker-purple {
+  background-color: #a855f7;
+}
+
+.marker-green {
+  background-color: #22c55e;
+}
+
+.marker-gray {
+  background-color: #6b7280;
+}
+
+/* Issue Popup */
+.issue-popup {
+  min-width: 200px;
+}
+
+.issue-popup h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.issue-popup p {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+}
+
+.issue-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.status-label {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.status-value {
+  font-size: 13px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: white;
+}
+
+.status-pending {
+  background-color: #ef4444;
+}
+
+.status-in_progress {
+  background-color: #f97316;
+}
+
+.status-scheduled {
+  background-color: #3b82f6;
+}
+
+.status-urgent {
+  background-color: #a855f7;
+}
+
+.status-completed, .status-fixed {
+  background-color: #22c55e;
+}
+
+.reported-by, .created-at {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 5px;
+}
+
+/* Grid Styling */
+.grid-line {
+  pointer-events: none;
+}
+
+.grid-label {
+  background: none;
+  border: none;
+}
+
+.grid-coord-label {
+  color: #3b82f6;
+  font-size: 10px;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 1px 3px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+/* Active control buttons */
+.map-controls button.active {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+
+/* Make sure the dialogs are above the fullscreen map */
+.dialog-overlay, .dialog-content {
+  z-index: 1001 !important;
+}

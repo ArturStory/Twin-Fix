@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Issue #{{issue.id}} Location</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .floor-plan-container {
+            position: relative;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .floor-plan {
+            width: 100%;
+            display: block;
+        }
+        .pin {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: red;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .issue-details {
+            background-color: white;
+            border-radius: 4px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        h2 {
+            color: #555;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .status-pending {
+            background-color: #ffebcd;
+            color: #cd853f;
+        }
+        .status-in-progress {
+            background-color: #e6f7ff;
+            color: #1890ff;
+        }
+        .status-completed {
+            background-color: #ebf8f2;
+            color: #52c41a;
+        }
+        .status-urgent {
+            background-color: #fff1f0;
+            color: #f5222d;
+        }
+        .info-row {
+            margin-bottom: 15px;
+        }
+        .label {
+            font-weight: bold;
+            display: inline-block;
+            width: 120px;
+        }
+        .value {
+            color: #333;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #1890ff;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Issue #{{issue.id}} Location</h1>
+        
+        <div class="issue-details">
+            <h2>{{issue.title}}</h2>
+            
+            <div class="status-badge status-{{issue.status}}">
+                {{issue.status}}
+            </div>
+            
+            <div class="info-row">
+                <span class="label">Description:</span>
+                <span class="value">{{issue.description}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="label">Location:</span>
+                <span class="value">{{issue.location}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="label">Priority:</span>
+                <span class="value">{{issue.priority}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="label">Reported by:</span>
+                <span class="value">{{issue.reportedByName}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="label">Reported on:</span>
+                <span class="value">{{issue.createdAt}}</span>
+            </div>
+        </div>
+
+        <div class="floor-plan-container">
+            <img src="{{floorplan_image}}" alt="Floor Plan" class="floor-plan">
+            <div class="pin" style="left: {{pin_x_percent}}%; top: {{pin_y_percent}}%;" title="{{issue.title}}"></div>
+        </div>
+        
+        <a href="/issues" class="back-link">← Back to all issues</a>
+    </div>
+</body>
+</html>

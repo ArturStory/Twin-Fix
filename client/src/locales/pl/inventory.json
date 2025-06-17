@@ -1,0 +1,23 @@
+{
+  "machineAddedTitle": "Dodano Nową Maszynę",
+  "machineAddedMessage": "{{user}} dodał(a) nową maszynę: {{name}} ({{category}}) w {{location}}",
+  "machineUpdatedTitle": "Zaktualizowano Maszynę",
+  "machineUpdatedMessage": "{{user}} zaktualizował(a) maszynę: {{name}} (zmieniono: {{fields}})",
+  "machineRemovedTitle": "Usunięto Maszynę",
+  "machineRemovedMessage": "{{user}} usunął(a) maszynę: {{name}}",
+  "locationAddedTitle": "Dodano Nową Lokalizację",
+  "locationAddedMessage": "{{user}} dodał(a) nową lokalizację: {{name}}",
+  "locationRemovedTitle": "Usunięto Lokalizację",
+  "locationRemovedMessage": "{{user}} usunął(a) lokalizację: {{name}}",
+  "categoryAddedTitle": "Dodano Nową Kategorię",
+  "categoryAddedMessage": "{{user}} dodał(a) nową kategorię: {{name}}",
+  "serviceReminderTitle": "Przypomnienie o Serwisie",
+  "serviceReminderMessage": "Maszyna {{name}} wymaga serwisu",
+  "inventoryChanges": "Zmiany w Inwentarzu",
+  "inventoryChangesDescription": "Powiadomienia w czasie rzeczywistym o zmianach w inwentarzu",
+  "locationChanges": "Zmiany Lokalizacji",
+  "locationChangesDescription": "Aktualizacje dotyczące dodawania i usuwania lokalizacji",
+  "viewAll": "Zobacz cały inwentarz",
+  "recentChanges": "Ostatnie Zmiany",
+  "noRecentChanges": "Brak ostatnich zmian w inwentarzu do wyświetlenia"
+}

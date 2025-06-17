@@ -1,0 +1,215 @@
+/* Twin Fix - Custom Styles */
+
+/* Base styles */
+:root {
+    --primary: #0d6efd;
+    --secondary: #6c757d;
+    --success: #198754;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --info: #0dcaf0;
+    --light: #f8f9fa;
+    --dark: #212529;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #333;
+    background-color: #f5f7fa;
+}
+
+/* Navbar enhancements */
+.navbar-brand {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.navbar-dark .navbar-brand {
+    background: linear-gradient(90deg, #fff, #f8f9fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Card enhancements */
+.card {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Button enhancements */
+.btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: linear-gradient(to right, #0d6efd, #0a58ca);
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(to right, #0a58ca, #084298);
+    border-color: #0a58ca;
+}
+
+.btn-outline-primary:hover {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+/* Status badges */
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+    border-radius: 0.375rem;
+}
+
+/* Form styling */
+.form-control, .form-select {
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+/* Statistics cards */
+.bg-gradient-primary {
+    background: linear-gradient(to right, #0d6efd, #0a58ca);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(to right, #198754, #146c43);
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(to right, #dc3545, #b02a37);
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(to right, #ffc107, #cc9a06);
+}
+
+.bg-gradient-info {
+    background: linear-gradient(to right, #0dcaf0, #098096);
+}
+
+/* Tables */
+.table {
+    border-color: #f1f1f1;
+}
+
+.table thead th {
+    border-top: none;
+    border-bottom-width: 1px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Issue status colors in tables */
+tr[data-status="pending"] {
+    border-left: 3px solid var(--secondary);
+}
+
+tr[data-status="in_progress"] {
+    border-left: 3px solid var(--primary);
+}
+
+tr[data-status="completed"] {
+    border-left: 3px solid var(--success);
+}
+
+tr[data-status="urgent"] {
+    border-left: 3px solid var(--danger);
+}
+
+tr[data-status="scheduled"] {
+    border-left: 3px solid var(--info);
+}
+
+/* Custom avatars */
+.avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    color: #6c757d;
+    font-weight: 600;
+}
+
+/* Footer */
+footer {
+    position: relative;
+    margin-top: 2rem;
+}
+
+/* Utilities */
+.opacity-50 {
+    opacity: 0.5;
+}
+
+.text-gradient-primary {
+    background: linear-gradient(45deg, #0d6efd, #0a58ca);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Dashboard card stats */
+.stat-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card .stat-icon {
+    position: absolute;
+    right: -15px;
+    bottom: -15px;
+    font-size: 4rem;
+    opacity: 0.2;
+}
+
+/* Custom alert styles */
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+/* Sidebar for larger screens */
+@media (min-width: 992px) {
+    .sidebar {
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        padding-top: 1rem;
+    }
+}

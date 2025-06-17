@@ -1,0 +1,23 @@
+{
+  "scheduleCreatedTitle": "Repair Scheduled",
+  "scheduleCreatedMessage": "{{user}} scheduled a repair for issue: {{title}} on {{date}} (Status: {{status}})",
+  "scheduleChangedTitle": "Repair Rescheduled",
+  "scheduleChangedMessage": "{{user}} rescheduled repair for {{title}} from {{oldDate}} to {{newDate}} (Status: {{status}})",
+  "repairCompletedTitle": "Repair Completed",
+  "repairCompletedMessage": "{{user}} completed repair for {{title}} on {{date}} (Cost: {{cost}})",
+  "status": {
+    "proposed": "Proposed",
+    "confirmed": "Confirmed",
+    "rescheduled": "Rescheduled",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "selectStatus": "Select status",
+  "statusDescription": "Select the current status of this repair schedule",
+  "noCostProvided": "Not provided",
+  "scheduledFor": "Scheduled for",
+  "rescheduledFrom": "Rescheduled from",
+  "to": "to",
+  "notes": "Notes",
+  "finalCost": "Final Cost"
+}

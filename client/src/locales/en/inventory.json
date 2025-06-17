@@ -1,0 +1,23 @@
+{
+  "machineAddedTitle": "New Machine Added",
+  "machineAddedMessage": "{{user}} added a new machine: {{name}} ({{category}}) at {{location}}",
+  "machineUpdatedTitle": "Machine Updated",
+  "machineUpdatedMessage": "{{user}} updated machine: {{name}} (changed: {{fields}})",
+  "machineRemovedTitle": "Machine Removed",
+  "machineRemovedMessage": "{{user}} removed machine: {{name}}",
+  "locationAddedTitle": "New Location Added",
+  "locationAddedMessage": "{{user}} added a new location: {{name}}",
+  "locationRemovedTitle": "Location Removed",
+  "locationRemovedMessage": "{{user}} removed location: {{name}}",
+  "categoryAddedTitle": "New Category Added",
+  "categoryAddedMessage": "{{user}} added a new category: {{name}}",
+  "serviceReminderTitle": "Service Reminder",
+  "serviceReminderMessage": "Machine {{name}} is due for service",
+  "inventoryChanges": "Inventory Changes",
+  "inventoryChangesDescription": "Real-time notifications about inventory changes",
+  "locationChanges": "Location Changes",
+  "locationChangesDescription": "Updates about location additions and removals",
+  "viewAll": "View all inventory",
+  "recentChanges": "Recent Changes",
+  "noRecentChanges": "No recent inventory changes to display"
+}

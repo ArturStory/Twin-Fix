@@ -1,0 +1,23 @@
+{
+  "scheduleCreatedTitle": "Reparación Programada",
+  "scheduleCreatedMessage": "{{user}} programó una reparación para el problema: {{title}} el {{date}} (Estado: {{status}})",
+  "scheduleChangedTitle": "Reparación Reprogramada",
+  "scheduleChangedMessage": "{{user}} reprogramó la reparación para {{title}} del {{oldDate}} al {{newDate}} (Estado: {{status}})",
+  "repairCompletedTitle": "Reparación Completada",
+  "repairCompletedMessage": "{{user}} completó la reparación de {{title}} el {{date}} (Costo: {{cost}})",
+  "status": {
+    "proposed": "Propuesto",
+    "confirmed": "Confirmado",
+    "rescheduled": "Reprogramado",
+    "completed": "Completado",
+    "cancelled": "Cancelado"
+  },
+  "selectStatus": "Seleccionar estado",
+  "statusDescription": "Seleccione el estado actual de esta programación de reparación",
+  "noCostProvided": "No proporcionado",
+  "scheduledFor": "Programado para",
+  "rescheduledFrom": "Reprogramado de",
+  "to": "a",
+  "notes": "Notas",
+  "finalCost": "Costo Final"
+}

@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+
+{% block title %}Issue #{{ issue.id }} - Twin Fix{% endblock %}
+
+{% block extra_css %}
+<style>
+    #map {
+        height: 300px;
+        width: 100%;
+        border-radius: 0.25rem;
+    }
+    .image-gallery {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    .issue-image {
+        width: 100px;
+        height: 100px;
+        border-radius: 5px;
+        object-fit: cover;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .issue-image:hover {
+        transform: scale(1.05);
+    }
+    .modal-image {
+        max-width: 100%;
+        max-height: 80vh;
+    }
+    .comment {
+        border-left: 3px solid #dee2e6;
+        padding-left: 15px;
+        margin-bottom: 20px;
+    }
+    .comment:last-child {
+        margin-bottom: 0;
+    }
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 25px;
+    }
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -24px;
+        top: 0;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background-color: #dee2e6;
+        z-index: 1;
+    }
+    .timeline-item.created::before {
+        background-color: #0d6efd;
+    }
+    .timeline-item.updated::before {
+        background-color: #ffc107;
+    }
+    .timeline-item.completed::before {
+        background-color: #198754;
+    }
+    .timeline-item.assigned::before {
+        background-color: #6f42c1;
+    }
+    .timeline-item.commented::before {
+        background-color: #0dcaf0;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -15px;
+        height: 100%;
+        width: 2px;
+        background-color: #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>
+        <i class="fas fa-clipboard me-2"></i>Issue #{{ issue.id }}
+        {% if issue.status == 'pending' %}
+            <span class="badge bg-secondary align-middle">Pending</span>
+        {% elif issue.status == 'in_progress' %}
+            <span class="badge bg-primary align-middle">In Progress</span>
+        {% elif issue.status == 'completed' %}
+            <span class="badge bg-success align-middle">Completed</span>
+        {% elif issue.status == 'urgent' %}
+            <span class="badge bg-danger align-middle">Urgent</span>
+        {% elif issue.status == 'scheduled' %}
+            <span class="badge bg-info align-middle">Scheduled</span>
+        {% endif %}
+    </h1>
+    <div>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary me-2">
+            <i class="fas fa-arrow-left me-1"></i> Back
+        </a>
+        {% if current_user.role in ['admin', 'operator'] or current_user.id == issue.reporter_id %}
+            <a href="{{ url_for('update_issue', issue_id=issue.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit me-1"></i> Edit
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Issue Details Card -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">{{ issue.title }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Status:</strong>
+                            {% if issue.status == 'pending' %}
+                                <span class="badge bg-secondary">Pending</span>
+                            {% elif issue.status == 'in_progress' %}
+                                <span class="badge bg-primary">In Progress</span>
+                            {% elif issue.status == 'completed' %}
+                                <span class="badge bg-success">Completed</span>
+                            {% elif issue.status == 'urgent' %}
+                                <span class="badge bg-danger">Urgent</span>
+                            {% elif issue.status == 'scheduled' %}
+                                <span class="badge bg-info">Scheduled</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-1"><strong>Priority:</strong>
+                            {% if issue.priority == 'low' %}
+                                <span class="badge bg-info">Low</span>
+                            {% elif issue.priority == 'medium' %}
+                                <span class="badge bg-warning text-dark">Medium</span>
+                            {% elif issue.priority == 'high' %}
+                                <span class="badge bg-danger">High</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-1"><strong>Location:</strong> {{ issue.location }}</p>
+                        <p class="mb-1"><strong>Reported By:</strong> {{ issue.reporter.username }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Created:</strong> {{ issue.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        <p class="mb-1"><strong>Last Updated:</strong> {{ issue.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        <p class="mb-1"><strong>Technician:</strong> 
+                            {% if issue.technician %}
+                                {{ issue.technician.username }}
+                            {% else %}
+                                <span class="text-muted">Not assigned</span>
+                            {% endif %}
+                        </p>
+                        {% if issue.status == 'completed' %}
+                            <p class="mb-1"><strong>Final Cost:</strong>
+                                {% if issue.final_cost %}
+                                    ${{ issue.final_cost|round(2) }}
+                                {% else %}
+                                    <span class="text-muted">Not specified</span>
+                                {% endif %}
+                            </p>
+                        {% else %}
+                            <p class="mb-1"><strong>Estimated Cost:</strong>
+                                {% if issue.estimated_cost %}
+                                    ${{ issue.estimated_cost|round(2) }}
+                                {% else %}
+                                    <span class="text-muted">Not estimated</span>
+                                {% endif %}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3">Description</h6>
+                <div class="bg-light p-3 rounded mb-4">
+                    <p class="mb-0">{{ issue.description }}</p>
+                </div>
+
+                {% if issue.latitude and issue.longitude %}
+                    <h6 class="fw-bold mb-3">Issue Location</h6>
+                    <div id="map" class="mb-4"></div>
+                {% endif %}
+
+                {% if issue.images %}
+                    <h6 class="fw-bold mb-3">Images</h6>
+                    <div class="image-gallery">
+                        {% for image in issue.images %}
+                            <img src="{{ url_for('static', filename='uploads/' + image.filename) }}" 
+                                class="issue-image" 
+                                alt="Issue image {{ loop.index }}" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#imageModal"
+                                data-src="{{ url_for('static', filename='uploads/' + image.filename) }}">
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <h6 class="fw-bold mb-3">Comments and Updates</h6>
+                <div class="timeline">
+                    <div class="timeline-item created">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="mb-1">Issue Reported</h6>
+                            <small class="text-muted">{{ issue.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                        <p class="text-muted mb-0">
+                            {{ issue.reporter.username }} created this issue
+                        </p>
+                    </div>
+
+                    {% if issue.technician %}
+                        <div class="timeline-item assigned">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1">Technician Assigned</h6>
+                                <small class="text-muted">{{ issue.updated_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <p class="text-muted mb-0">
+                                {{ issue.technician.username }} was assigned to this issue
+                            </p>
+                        </div>
+                    {% endif %}
+
+                    {% for comment in comments %}
+                        <div class="timeline-item commented">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1">{{ comment.user.username }} commented</h6>
+                                <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <p class="mb-0">{{ comment.content }}</p>
+                        </div>
+                    {% endfor %}
+
+                    {% if issue.status == 'completed' %}
+                        <div class="timeline-item completed">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1">Issue Resolved</h6>
+                                <small class="text-muted">{{ issue.updated_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <p class="text-muted mb-0">
+                                This issue has been marked as completed
+                                {% if issue.final_cost %}
+                                    with a final cost of ${{ issue.final_cost|round(2) }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer bg-white">
+                <form method="POST" action="{{ url_for('add_comment', issue_id=issue.id) }}">
+                    <div class="mb-3">
+                        <label for="comment-content" class="form-label">Add Comment</label>
+                        <textarea class="form-control" id="comment-content" name="content" rows="3" required placeholder="Add your comments, updates, or questions..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-comment me-2"></i>Post Comment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Action Panel -->
+        {% if current_user.role in ['admin', 'operator'] %}
+            <div class="card shadow mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Administrative Actions</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('update_issue', issue_id=issue.id) }}">
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Update Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="pending" {% if issue.status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="in_progress" {% if issue.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="scheduled" {% if issue.status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                                <option value="urgent" {% if issue.status == 'urgent' %}selected{% endif %}>Urgent</option>
+                                <option value="completed" {% if issue.status == 'completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="priority" class="form-label">Update Priority</label>
+                            <select class="form-select" id="priority" name="priority">
+                                <option value="low" {% if issue.priority == 'low' %}selected{% endif %}>Low</option>
+                                <option value="medium" {% if issue.priority == 'medium' %}selected{% endif %}>Medium</option>
+                                <option value="high" {% if issue.priority == 'high' %}selected{% endif %}>High</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="technician_id" class="form-label">Assign Technician</label>
+                            <select class="form-select" id="technician_id" name="technician_id">
+                                <option value="">-- Unassigned --</option>
+                                {% for tech in technicians %}
+                                    <option value="{{ tech.id }}" {% if issue.technician_id == tech.id %}selected{% endif %}>
+                                        {{ tech.username }} ({{ tech.assigned_issues|length }} assigned)
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="estimated_cost" class="form-label">Estimated Cost ($)</label>
+                            <input type="number" class="form-control" id="estimated_cost" name="estimated_cost" step="0.01" min="0" value="{{ issue.estimated_cost or '' }}">
+                        </div>
+                        
+                        {% if issue.status == 'completed' or current_user.role == 'admin' %}
+                            <div class="mb-3">
+                                <label for="final_cost" class="form-label">Final Cost ($)</label>
+                                <input type="number" class="form-control" id="final_cost" name="final_cost" step="0.01" min="0" value="{{ issue.final_cost or '' }}">
+                            </div>
+                        {% endif %}
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-save me-2"></i>Update Issue
+                        </button>
+                    </form>
+                    
+                    {% if current_user.role == 'admin' %}
+                        <hr>
+                        <form method="POST" action="{{ url_for('delete_issue', issue_id=issue.id) }}" class="mt-3" onsubmit="return confirm('Are you sure you want to delete this issue? This action cannot be undone.');">
+                            <button type="submit" class="btn btn-danger w-100">
+                                <i class="fas fa-trash-alt me-2"></i>Delete Issue
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        
+        {% if current_user.role == 'technician' and issue.technician_id == current_user.id %}
+            <div class="card shadow mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Technician Actions</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('update_issue', issue_id=issue.id) }}">
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Update Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="in_progress" {% if issue.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="completed" {% if issue.status == 'completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                        </div>
+                        
+                        {% if issue.status == 'completed' or current_user.role == 'admin' %}
+                            <div class="mb-3">
+                                <label for="final_cost" class="form-label">Final Cost ($)</label>
+                                <input type="number" class="form-control" id="final_cost" name="final_cost" step="0.01" min="0" value="{{ issue.final_cost or '' }}">
+                            </div>
+                        {% endif %}
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-save me-2"></i>Update Issue
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Similar Issues Panel -->
+        {% if similar_issues %}
+            <div class="card shadow">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="fas fa-link me-2"></i>Similar Issues</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for similar in similar_issues %}
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="{{ url_for('view_issue', issue_id=similar.id) }}" class="text-decoration-none">
+                                            <strong>#{{ similar.id }}</strong> {{ similar.title }}
+                                        </a>
+                                        <br>
+                                        <small class="text-muted">{{ similar.location }}</small>
+                                    </div>
+                                    <span class="badge 
+                                        {% if similar.status == 'pending' %}bg-secondary
+                                        {% elif similar.status == 'in_progress' %}bg-primary
+                                        {% elif similar.status == 'completed' %}bg-success
+                                        {% elif similar.status == 'urgent' %}bg-danger
+                                        {% else %}bg-info{% endif %}">
+                                        {{ similar.status|capitalize }}
+                                    </span>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Image Detail</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" class="modal-image" src="" alt="Issue image full size">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize map if coordinates are available
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if issue.latitude and issue.longitude %}
+            const map = L.map('map').setView([{{ issue.latitude }}, {{ issue.longitude }}], 15);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Add marker at issue location
+            L.marker([{{ issue.latitude }}, {{ issue.longitude }}]).addTo(map)
+                .bindPopup('Issue location: {{ issue.location }}')
+                .openPopup();
+        {% endif %}
+        
+        // Set up image modal
+        const imageModal = document.getElementById('imageModal');
+        if (imageModal) {
+            imageModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const imageSrc = button.getAttribute('data-src');
+                document.getElementById('modalImage').src = imageSrc;
+            });
+        }
+    });
+</script>
+{% endblock %}
