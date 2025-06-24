@@ -23,12 +23,12 @@ import { migrateDatabase } from './drizzle-sqlite';
 
 // Run migrations before starting the server
 migrateDatabase()
-  .then(() => {
-console.log('✅ SQLite database initialized, starting server...');
-console.log('⚡️ Migrations finished. Attempting to start the server...');
-    import('./index');
-  })
-  .catch(error => {
-    console.error('Failed to initialize SQLite database:', error);
-    process.exit(1);
-  });
+ .then(async () => {
+  console.log('✅ SQLite database initialized, starting server...');
+  console.log('⚡️ Migrations finished. Attempting to start the server...');
+  try {
+    await import('./index');
+  } catch (err) {
+    console.error('❌ Failed to import server/index.ts:', err);
+  }
+}) 
