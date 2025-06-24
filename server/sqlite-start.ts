@@ -1,34 +1,29 @@
-/**
- * This is a wrapper script to start the server with SQLite storage enabled.
- * It sets the environment variables before importing any modules to ensure
- * the SQLite database is used instead of PostgreSQL.
- * 
- * This provides a complete SQLite-based alternative to the PostgreSQL database
- * for development and testing purposes.
- */
-console.log("✅ Twin Fix server starting...");
-// Force enable SQLite mode before importing any modules
+// ✅ Force SQLite mode and disable PostgreSQL
 process.env.USE_SQLITE = 'true';
-
-// Disable PostgreSQL mode by unsetting the DATABASE_URL
 delete process.env.DATABASE_URL;
 
-// Configure paths for the drizzle schema
-process.env.DRIZZLE_SCHEMA = './shared/schema-sqlite.ts';
+// ✅ Show that SQLite mode is active
+console.log("🔧 Using SQLite mode (USE_SQLITE):", process.env.USE_SQLITE);
 
-console.log('Starting server with SQLite storage enabled');
+// ✅ Start
+console.log('🟢 Starting server with SQLite storage enabled');
 
-// Initialize the SQLite database
+// ✅ Import database migration function
 import { migrateDatabase } from './drizzle-sqlite';
 
-// Run migrations before starting the server
+// ✅ Run migrations and start the server
 migrateDatabase()
- .then(async () => {
-  console.log('✅ SQLite database initialized, starting server...');
-  console.log('⚡️ Migrations finished. Attempting to start the server...');
-  try {
-    await import('./index');
-  } catch (err) {
-    console.error('❌ Failed to import server/index.ts:', err);
-  }
-}) 
+  .then(async () => {
+    console.log('✅ SQLite database initialized');
+    console.log('⚡ Migrations finished. Attempting to start the server...');
+
+    try {
+      await import('./index');
+    } catch (err) {
+      console.error('❌ Failed to import server/index.ts:', err);
+    }
+  })
+  .catch(error => {
+    console.error('❌ Failed to initialize SQLite database:', error);
+    process.exit(1);
+  });
