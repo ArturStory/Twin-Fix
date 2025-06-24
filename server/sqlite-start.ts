@@ -6,7 +6,7 @@
  * This provides a complete SQLite-based alternative to the PostgreSQL database
  * for development and testing purposes.
  */
-
+console.log("✅ Twin Fix server starting...");
 // Force enable SQLite mode before importing any modules
 process.env.USE_SQLITE = 'true';
 
