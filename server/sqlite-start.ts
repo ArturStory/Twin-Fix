@@ -24,8 +24,8 @@ import { migrateDatabase } from './drizzle-sqlite';
 // Run migrations before starting the server
 migrateDatabase()
   .then(() => {
-    console.log('SQLite database initialized, starting server...');
-    // Import the main server module
+console.log('✅ SQLite database initialized, starting server...');
+console.log('⚡️ Migrations finished. Attempting to start the server...');
     import('./index');
   })
   .catch(error => {
