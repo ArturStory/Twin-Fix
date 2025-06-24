@@ -1,27 +1,24 @@
-/**
- * SQLite database connection using better-sqlite3 and drizzle-orm
- */
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import * as schema from "@shared/schema";
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
 import path from 'path';
-import fs from 'fs';
 
-// Create database directory if it doesn't exist
-const dbDir = path.join(process.cwd(), 'data');
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-}
+const dbPath = path.join(process.cwd(), 'data', 'issues.db');
 
-// Database file path
-const DB_PATH = path.join(dbDir, 'issues.db');
-console.log(`SQLite database path: ${DB_PATH}`);
+export const initDb = async () => {
+  const db = await open({
+    filename: dbPath,
+    driver: sqlite3.Database
+  });
 
-// Create SQLite database connection
-const sqlite = new Database(DB_PATH);
+  // Uncomment and customize this block if needed to create your table
+  // await db.exec(`
+  //   CREATE TABLE IF NOT EXISTS issues (
+  //     id INTEGER PRIMARY KEY AUTOINCREMENT,
+  //     title TEXT NOT NULL,
+  //     description TEXT,
+  //     status TEXT DEFAULT 'open'
+  //   );
+  // `);
 
-// Initialize SQLite with foreign keys enabled
-sqlite.pragma('foreign_keys = ON');
-
-// Export the drizzle DB instance
-export const db = drizzle(sqlite, { schema });
+  return db;
+};
