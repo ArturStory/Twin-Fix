@@ -3,8 +3,6 @@
 import sqlite3 from "sqlite3";
 import { open, Database } from "sqlite";
 import path from "path";
-import { log } from "../vite";
-
 export let db: Database;
 
 export async function initialize() {
