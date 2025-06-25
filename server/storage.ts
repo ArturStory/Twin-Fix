@@ -2101,8 +2101,7 @@ export class PostgresStorage implements IStorage {
 // Import SQLite storage implementation
 // Import SQLiteStorage from JS file (to avoid TypeScript issues with better-sqlite3)
 // @ts-ignore - Ignore TypeScript errors for this import
-import { SQLiteStorage } from './sqlite-storage.js';
-
+import { SQLiteStorage } from "./sqlite-storage";
 let storage: IStorage;
 
 // Check for USE_SQLITE environment variable to enable SQLite storage
