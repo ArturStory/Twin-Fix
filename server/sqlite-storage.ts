@@ -1,3 +1,11 @@
+/***********************************************************************
+* server/sqlite-storage.ts
+*
+* In-memory singleton wrapper around an on-disk SQLite database.
+*  • Forces the DB file to live at   /data/issues.db   (adjust if needed)
+*  • Creates / migrates all tables at start-up
+*  • Implements every method required by IStorage
+***********************************************************************/
 
 import sqlite3 from "sqlite3";
 import { open, Database } from "sqlite";
@@ -5,12 +13,12 @@ import path from "path";
 import { log } from "./vite";
 
 import {
- User, InsertUser,
- Issue, InsertIssue,
- Comment, InsertComment,
- Image, InsertImage,
+ User,          InsertUser,
+ Issue,         InsertIssue,
+ Comment,       InsertComment,
+ Image,         InsertImage,
  StatusHistory, InsertStatusHistory,
- IssueStatus, IssueType
+ IssueStatus,   IssueType
 } from "@shared/schema";
 
 import { IStorage } from "./storage";
@@ -18,12 +26,15 @@ import { IStorage } from "./storage";
 /* Location of the DB file (→ /data/issues.db) */
 const DB_PATH = path.join(process.cwd(), "data", "issues.db");
 
-/* Helper – return singleton async DB handle */
+/* -------------------------------------------------------------- */
+/*  Singleton DB handle                                           */
+/* -------------------------------------------------------------- */
 let db: Database | undefined;
+
 async function getDb(): Promise<Database> {
  if (db) return db;
 
- /* make sure /data folder exists */
+ /* ensure /data folder exists */
  const fs = await import("fs/promises");
  await fs.mkdir(path.dirname(DB_PATH), { recursive: true });
 
@@ -36,20 +47,21 @@ async function getDb(): Promise<Database> {
 /*  Main storage class                                                */
 /* ------------------------------------------------------------------ */
 export class SQLiteStorage implements IStorage {
- /* Call await storage.init() once in app bootstrap */
+ /* Call await storage.init() once during app boot-strap */
  async init(): Promise<void> {
    log(`SQLite DB @ ${DB_PATH}`, "sqlite");
    await this.initializeSchema();
    log("SQLite schema ready", "sqlite");
  }
 
- /* -------------------------------------------------------------- */
- /*  Schema definition                                             */
- /* -------------------------------------------------------------- */
+ /* ------------------------------------------------------------ */
+ /*  Create / migrate ALL tables (runs every start-up, idempotent)*/
+ /* ------------------------------------------------------------ */
  private async initializeSchema(): Promise<void> {
    const db = await getDb();
+
    await db.exec(`
-     /* users */
+     /* ─────────────────────────────── users table ────────────────────────────── */
      CREATE TABLE IF NOT EXISTS users (
        id            INTEGER PRIMARY KEY AUTOINCREMENT,
        username      TEXT NOT NULL UNIQUE,
@@ -58,7 +70,7 @@ export class SQLiteStorage implements IStorage {
        avatar_url    TEXT
      );
 
-     /* issues */
+     /* ─────────────────────────────── issues table ───────────────────────────── */
      CREATE TABLE IF NOT EXISTS issues (
        id              INTEGER PRIMARY KEY AUTOINCREMENT,
        title           TEXT NOT NULL,
@@ -80,11 +92,11 @@ export class SQLiteStorage implements IStorage {
        fixedByName     TEXT,
        fixedAt         TEXT,
        timeToFix       INTEGER,
-       createdAt       TEXT    NOT NULL,
-       updatedAt       TEXT    NOT NULL
+       createdAt       TEXT NOT NULL,
+       updatedAt       TEXT NOT NULL
      );
 
-     /* comments */
+     /* ────────────────────────────── comments table ──────────────────────────── */
      CREATE TABLE IF NOT EXISTS comments (
        id        INTEGER PRIMARY KEY AUTOINCREMENT,
        content   TEXT NOT NULL,
@@ -94,7 +106,7 @@ export class SQLiteStorage implements IStorage {
        createdAt TEXT NOT NULL
      );
 
-     /* images */
+     /* ─────────────────────────────── images table ───────────────────────────── */
      CREATE TABLE IF NOT EXISTS images (
        id        INTEGER PRIMARY KEY AUTOINCREMENT,
        filename  TEXT NOT NULL,
@@ -102,7 +114,7 @@ export class SQLiteStorage implements IStorage {
        createdAt TEXT NOT NULL
      );
 
-     /* status history */
+     /* ──────────────────────────── status_history table ──────────────────────── */
      CREATE TABLE IF NOT EXISTS status_history (
        id            INTEGER PRIMARY KEY AUTOINCREMENT,
        issueId       INTEGER NOT NULL,
@@ -113,66 +125,67 @@ export class SQLiteStorage implements IStorage {
        notes         TEXT,
        createdAt     TEXT NOT NULL
      );
+
+     /* ────────────────────────────── machines table ──────────────────────────── */
+     CREATE TABLE IF NOT EXISTS machines (
+       id               INTEGER PRIMARY KEY AUTOINCREMENT,
+       name             TEXT NOT NULL,
+       serialNumber     TEXT NOT NULL,
+       categoryId       INTEGER,
+       installationDate TEXT,
+       lastServiceDate  TEXT,
+       nextServiceDate  TEXT,
+       imageUrl         TEXT,
+       createdAt        TEXT NOT NULL,
+       updatedAt        TEXT NOT NULL
+     );
+
+     /* ────────────────────────── machine_categories table ────────────────────── */
+     CREATE TABLE IF NOT EXISTS machine_categories (
+       id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+       name               TEXT NOT NULL,
+       serviceIntervalDays INTEGER DEFAULT 0
+     );
+
+     /* ─────────────────────────── machine_services table ─────────────────────── */
+     CREATE TABLE IF NOT EXISTS machine_services (
+       id          INTEGER PRIMARY KEY AUTOINCREMENT,
+       machineId   INTEGER NOT NULL,
+       title       TEXT NOT NULL,
+       notes       TEXT,
+       cost        REAL DEFAULT 0,
+       serviceDate TEXT NOT NULL,
+       createdAt   TEXT NOT NULL,
+       FOREIGN KEY (machineId) REFERENCES machines(id) ON DELETE CASCADE
+     );
+
+     /* ────────────────────────── machine_assignments table ───────────────────── */
+     CREATE TABLE IF NOT EXISTS machine_assignments (
+       id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+       machineId            INTEGER NOT NULL,
+       userId               INTEGER NOT NULL,
+       notificationEnabled  INTEGER DEFAULT 1,
+       createdAt            TEXT NOT NULL,
+       FOREIGN KEY (machineId) REFERENCES machines(id) ON DELETE CASCADE
+     );
+
+     /* ───────────────────────────── notifications table ──────────────────────── */
+     CREATE TABLE IF NOT EXISTS notifications (
+       id              INTEGER PRIMARY KEY AUTOINCREMENT,
+       userId          INTEGER NOT NULL,
+       title           TEXT NOT NULL,
+       message         TEXT NOT NULL,
+       type            TEXT,
+       relatedMachineId INTEGER,
+       link            TEXT,
+       createdAt       TEXT NOT NULL
+     );
    `);
-   -- machines table
-CREATE TABLE IF NOT EXISTS machines (
-  id                INTEGER PRIMARY KEY AUTOINCREMENT,
-  name              TEXT NOT NULL,
-  serialNumber      TEXT NOT NULL,
-  categoryId        INTEGER,
-  installationDate  TEXT,
-  lastServiceDate   TEXT,
-  nextServiceDate   TEXT,
-  imageUrl          TEXT,
-  createdAt         TEXT NOT NULL,
-  updatedAt         TEXT NOT NULL
-);
-
--- machine_categories table
-CREATE TABLE IF NOT EXISTS machine_categories (
-  id                 INTEGER PRIMARY KEY AUTOINCREMENT,
-  name               TEXT NOT NULL,
-  serviceIntervalDays INTEGER DEFAULT 0
-);
-
--- machine_services table
-CREATE TABLE IF NOT EXISTS machine_services (
-  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  machineId   INTEGER NOT NULL,
-  title       TEXT NOT NULL,
-  notes       TEXT,
-  cost        REAL DEFAULT 0,
-  serviceDate TEXT NOT NULL,
-  createdAt   TEXT NOT NULL,
-  FOREIGN KEY (machineId) REFERENCES machines(id) ON DELETE CASCADE
-);
-
--- machine_assignments table
-CREATE TABLE IF NOT EXISTS machine_assignments (
-  id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-  machineId           INTEGER NOT NULL,
-  userId              INTEGER NOT NULL,
-  notificationEnabled INTEGER DEFAULT 1,
-  createdAt           TEXT NOT NULL,
-  FOREIGN KEY (machineId) REFERENCES machines(id) ON DELETE CASCADE
-);
-
--- notifications table
-CREATE TABLE IF NOT EXISTS notifications (
-  id               INTEGER PRIMARY KEY AUTOINCREMENT,
-  userId           INTEGER NOT NULL,
-  title            TEXT NOT NULL,
-  message          TEXT NOT NULL,
-  type             TEXT,
-  relatedMachineId INTEGER,
-  link             TEXT,
-  createdAt        TEXT NOT NULL
-);   
  }
 
- /* -------------------------------------------------------------- */
- /*  USERs                                                         */
- /* -------------------------------------------------------------- */
+ /* ============================================================================
+  *  USERS
+  * ========================================================================== */
  async getUser(id: number): Promise<User | undefined> {
    const db = await getDb();
    return db.get<User>("SELECT * FROM users WHERE id = ?", id);
@@ -199,9 +212,9 @@ CREATE TABLE IF NOT EXISTS notifications (
    };
  }
 
- /* -------------------------------------------------------------- */
- /*  ISSUES                                                        */
- /* -------------------------------------------------------------- */
+ /* ============================================================================
+  *  ISSUES
+  * ========================================================================== */
  async getIssues(): Promise<Issue[]> {
    const db = await getDb();
    const list = await db.all<Issue[]>(`SELECT * FROM issues ORDER BY updatedAt DESC`);
@@ -269,7 +282,7 @@ CREATE TABLE IF NOT EXISTS notifications (
    };
 
    const fields: string[] = [];
-   const values: any[]    = [];
+   const values: any[]   = [];
    for (const [k, v] of Object.entries(allowed)) {
      if (v !== undefined) { fields.push(`${k} = ?`); values.push(v); }
    }
@@ -287,9 +300,9 @@ CREATE TABLE IF NOT EXISTS notifications (
    return res.changes! > 0;
  }
 
- /* -------------------------------------------------------------- */
- /*  COMMENTS                                                      */
- /* -------------------------------------------------------------- */
+ /* ============================================================================
+  *  COMMENTS
+  * ========================================================================== */
  async getComments(issueId: number): Promise<Comment[]> {
    const db = await getDb();
    return db.all<Comment[]>(
@@ -308,9 +321,9 @@ CREATE TABLE IF NOT EXISTS notifications (
    return db.get<Comment>("SELECT * FROM comments WHERE id = ?", res.lastID!);
  }
 
- /* -------------------------------------------------------------- */
- /*  IMAGES                                                        */
- /* -------------------------------------------------------------- */
+ /* ============================================================================
+  *  IMAGES
+  * ========================================================================== */
  async getImage(id: number): Promise<Image | undefined> {
    const db = await getDb();
    return db.get<Image>("SELECT * FROM images WHERE id = ?", id);
@@ -331,9 +344,9 @@ CREATE TABLE IF NOT EXISTS notifications (
    return db.get<Image>("SELECT * FROM images WHERE id = ?", res.lastID!);
  }
 
- /* -------------------------------------------------------------- */
- /*  STATUS HISTORY                                                */
- /* -------------------------------------------------------------- */
+ /* ============================================================================
+  *  STATUS HISTORY
+  * ========================================================================== */
  async getStatusHistory(issueId: number): Promise<StatusHistory[]> {
    const db = await getDb();
    return db.all<StatusHistory[]>(
@@ -358,9 +371,9 @@ CREATE TABLE IF NOT EXISTS notifications (
    );
  }
 
- /* -------------------------------------------------------------- */
- /*  Mark / update status helpers (same signature)                 */
- /* -------------------------------------------------------------- */
+ /* ============================================================================
+  *  Mark / update status helpers
+  * ========================================================================== */
  async updateIssueStatus(
    id: number,
    newStatus: IssueStatus,
@@ -418,9 +431,9 @@ CREATE TABLE IF NOT EXISTS notifications (
    );
  }
 
- /* -------------------------------------------------------------- */
- /*  BASIC STATS (unchanged SQL, async .get / .all)                */
- /* -------------------------------------------------------------- */
+ /* ============================================================================
+  *  BASIC STATS
+  * ========================================================================== */
  async getIssueStatistics(issueType?: IssueType): Promise<{
    totalIssues: number; openIssues: number; fixedIssues: number;
    averageFixTime?: number; mostReportedLocation?: string; lastFixDate?: Date;
@@ -429,21 +442,21 @@ CREATE TABLE IF NOT EXISTS notifications (
    const tf = issueType ? "WHERE issueType = ?" : "";
    const tp = issueType ? [issueType] : [];
 
-   const total      = (await db.get<{cnt:number}>(`SELECT COUNT(*) cnt FROM issues ${tf}`, ...tp)).cnt;
-   const open       = (await db.get<{cnt:number}>(`
+   const total       = (await db.get<{cnt:number}>(`SELECT COUNT(*) cnt FROM issues ${tf}`, ...tp)).cnt;
+   const open        = (await db.get<{cnt:number}>(`
      SELECT COUNT(*) cnt FROM issues WHERE status != '${IssueStatus.FIXED}'
      ${tf ? "AND " + tf.slice(6) : ""}`, ...tp)).cnt;
-   const fixed      = (await db.get<{cnt:number}>(`
+   const fixed       = (await db.get<{cnt:number}>(`
      SELECT COUNT(*) cnt FROM issues WHERE status = '${IssueStatus.FIXED}'
      ${tf ? "AND " + tf.slice(6) : ""}`, ...tp)).cnt;
-   const avgFixTime = (await db.get<{avg:number|null}>(`
+   const avgFixTime  = (await db.get<{avg:number|null}>(`
      SELECT AVG(timeToFix) avg FROM issues
      WHERE status = '${IssueStatus.FIXED}' AND timeToFix IS NOT NULL
      ${tf ? "AND " + tf.slice(6) : ""}`, ...tp)).avg ?? undefined;
-   const topLoc     = await db.get<{location:string}>(`
+   const topLoc      = await db.get<{location:string}>(`
      SELECT location, COUNT(*) c FROM issues ${tf}
      GROUP BY location ORDER BY c DESC LIMIT 1`, ...tp);
-   const lastDate   = await db.get<{fixedAt:string}>(`
+   const lastDate    = await db.get<{fixedAt:string}>(`
      SELECT fixedAt FROM issues
      WHERE status = '${IssueStatus.FIXED}' AND fixedAt IS NOT NULL
      ${tf ? "AND " + tf.slice(6) : ""} ORDER BY fixedAt DESC LIMIT 1`, ...tp);
