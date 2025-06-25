@@ -10,15 +10,15 @@ export const initDb = async () => {
     driver: sqlite3.Database
   });
 
-  // Uncomment and customize this block if needed to create your table
-  // await db.exec(`
-  //   CREATE TABLE IF NOT EXISTS issues (
-  //     id INTEGER PRIMARY KEY AUTOINCREMENT,
-  //     title TEXT NOT NULL,
-  //     description TEXT,
-  //     status TEXT DEFAULT 'open'
-  //   );
-  // `);
+   Uncomment and customize this block if needed to create your table
+   await db.exec(`
+     CREATE TABLE IF NOT EXISTS issues (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       title TEXT NOT NULL,
+       description TEXT,
+       status TEXT DEFAULT 'open'
+     );
+   `);
 
   return db;
 };
