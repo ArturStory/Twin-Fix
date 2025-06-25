@@ -114,6 +114,60 @@ export class SQLiteStorage implements IStorage {
        createdAt     TEXT NOT NULL
      );
    `);
+   -- machines table
+CREATE TABLE IF NOT EXISTS machines (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  name              TEXT NOT NULL,
+  serialNumber      TEXT NOT NULL,
+  categoryId        INTEGER,
+  installationDate  TEXT,
+  lastServiceDate   TEXT,
+  nextServiceDate   TEXT,
+  imageUrl          TEXT,
+  createdAt         TEXT NOT NULL,
+  updatedAt         TEXT NOT NULL
+);
+
+-- machine_categories table
+CREATE TABLE IF NOT EXISTS machine_categories (
+  id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+  name               TEXT NOT NULL,
+  serviceIntervalDays INTEGER DEFAULT 0
+);
+
+-- machine_services table
+CREATE TABLE IF NOT EXISTS machine_services (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  machineId   INTEGER NOT NULL,
+  title       TEXT NOT NULL,
+  notes       TEXT,
+  cost        REAL DEFAULT 0,
+  serviceDate TEXT NOT NULL,
+  createdAt   TEXT NOT NULL,
+  FOREIGN KEY (machineId) REFERENCES machines(id) ON DELETE CASCADE
+);
+
+-- machine_assignments table
+CREATE TABLE IF NOT EXISTS machine_assignments (
+  id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+  machineId           INTEGER NOT NULL,
+  userId              INTEGER NOT NULL,
+  notificationEnabled INTEGER DEFAULT 1,
+  createdAt           TEXT NOT NULL,
+  FOREIGN KEY (machineId) REFERENCES machines(id) ON DELETE CASCADE
+);
+
+-- notifications table
+CREATE TABLE IF NOT EXISTS notifications (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  userId           INTEGER NOT NULL,
+  title            TEXT NOT NULL,
+  message          TEXT NOT NULL,
+  type             TEXT,
+  relatedMachineId INTEGER,
+  link             TEXT,
+  createdAt        TEXT NOT NULL
+);   
  }
 
  /* -------------------------------------------------------------- */
