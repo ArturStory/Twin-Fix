@@ -1,122 +1,139 @@
-// Twin Fix - Main JavaScript file
+/* ------------------------------------------------------------------
+  main.ts  – Twin-Fix client helpers (Bootstrap 5)
+  ------------------------------------------------------------------ */
 
-// Wait for the DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Bootstrap tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+/**
+* Bootstrap ships its own UMD bundle; when you include it with a normal
+* `<script src=".../bootstrap.bundle.min.js">` the global `bootstrap`
+* object is created.  We add a *minimal* ambient declaration so the TS
+* compiler doesn’t complain.  (If you later install `@types/bootstrap`
+* you can delete this and get full typings.)
+*/
+declare const bootstrap: {
+ Tooltip: new (el: Element) => unknown;
+ Popover: new (el: Element) => unknown;
+ Alert: new (el: Element) => { close(): void };
+};
 
-    // Initialize Bootstrap popovers
-    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-        return new bootstrap.Popover(popoverTriggerEl);
-    });
+document.addEventListener("DOMContentLoaded", () => {
+ /* ------------------------------------------------------------ */
+ /*  Bootstrap helpers                                           */
+ /* ------------------------------------------------------------ */
 
-    // Auto-dismiss alerts
-    setTimeout(function() {
-        var alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
-        alerts.forEach(function(alert) {
-            var bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        });
-    }, 5000); // Close after 5 seconds
+ // Tooltips
+ const tooltipEls: NodeListOf<Element> =
+   document.querySelectorAll('[data-bs-toggle="tooltip"]');
+ Array.from(tooltipEls).forEach(el => new bootstrap.Tooltip(el));
 
-    // Handle status filter buttons
-    var statusFilterButtons = document.querySelectorAll('[data-filter]');
-    statusFilterButtons.forEach(function(button) {
-        button.addEventListener('click', function() {
-            var filter = this.getAttribute('data-filter');
-            var table = document.getElementById('issuesTable');
-            
-            if (table) {
-                var rows = table.querySelectorAll('tbody tr');
-                
-                rows.forEach(function(row) {
-                    if (filter === 'all' || row.getAttribute('data-status') === filter) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-                
-                // Update active state on buttons
-                statusFilterButtons.forEach(function(btn) {
-                    btn.classList.remove('active');
-                });
-                this.classList.add('active');
-            }
-        });
-    });
+ // Popovers
+ const popoverEls: NodeListOf<Element> =
+   document.querySelectorAll('[data-bs-toggle="popover"]');
+ Array.from(popoverEls).forEach(el => new bootstrap.Popover(el));
 
-    // Confirm delete actions
-    var deleteButtons = document.querySelectorAll('.btn-delete, [data-confirm]');
-    deleteButtons.forEach(function(button) {
-        button.addEventListener('click', function(e) {
-            var message = this.getAttribute('data-confirm-message') || 'Are you sure you want to delete this item? This action cannot be undone.';
-            if (!confirm(message)) {
-                e.preventDefault();
-                return false;
-            }
-        });
-    });
+ // Auto–dismiss alerts (⌛ 5 s)
+ window.setTimeout(() => {
+   document
+     .querySelectorAll<HTMLElement>(".alert:not(.alert-permanent)")
+     .forEach(el => new bootstrap.Alert(el).close());
+ }, 5_000);
 
-    // Image preview for file inputs
-    var imageInputs = document.querySelectorAll('input[type="file"][accept*="image"]');
-    imageInputs.forEach(function(input) {
-        input.addEventListener('change', function() {
-            var previewContainer = document.getElementById(this.getAttribute('data-preview') || 'imagePreview');
-            if (!previewContainer) return;
-            
-            previewContainer.innerHTML = '';
-            
-            if (this.files && this.files.length > 0) {
-                for (var i = 0; i < this.files.length; i++) {
-                    if (i >= 5) break; // Limit to 5 previews
-                    
-                    (function(file) {
-                        if (!file.type.match('image.*')) return;
-                        
-                        var reader = new FileReader();
-                        reader.onload = function(e) {
-                            var preview = document.createElement('div');
-                            preview.className = 'image-preview';
-                            
-                            var img = document.createElement('img');
-                            img.src = e.target.result;
-                            img.className = 'img-thumbnail';
-                            
-                            preview.appendChild(img);
-                            previewContainer.appendChild(preview);
-                        };
-                        
-                        reader.readAsDataURL(file);
-                    })(this.files[i]);
-                }
-            }
-        });
-    });
+ /* ------------------------------------------------------------ */
+ /*  Status-filter buttons                                       */
+ /* ------------------------------------------------------------ */
 
-    // Handle issue priority
-    var urgentCheckbox = document.getElementById('urgent');
-    var prioritySelect = document.getElementById('priority');
-    
-    if (urgentCheckbox && prioritySelect) {
-        urgentCheckbox.addEventListener('change', function() {
-            if (this.checked) {
-                prioritySelect.value = 'high';
-                prioritySelect.disabled = true;
-            } else {
-                prioritySelect.disabled = false;
-            }
-        });
-    }
+ const filterButtons = document.querySelectorAll<HTMLElement>("[data-filter]");
+ filterButtons.forEach(btn => {
+   btn.addEventListener("click", () => {
+     const filter = btn.dataset.filter ?? "all";
+     const table = document.getElementById("issuesTable");
+     if (!table) return;
 
-    // Add current year to footer
-    var yearElements = document.querySelectorAll('.current-year');
-    var currentYear = new Date().getFullYear();
-    yearElements.forEach(function(element) {
-        element.textContent = currentYear;
-    });
+     table
+       .querySelectorAll<HTMLTableRowElement>("tbody tr")
+       .forEach(row => {
+         row.style.display =
+           filter === "all" || row.dataset.status === filter ? "" : "none";
+       });
+
+     // visual “active” state
+     filterButtons.forEach(b => b.classList.remove("active"));
+     btn.classList.add("active");
+   });
+ });
+
+ /* ------------------------------------------------------------ */
+ /*  Destructive-action confirm dialogs                          */
+ /* ------------------------------------------------------------ */
+
+ const confirmEls =
+   document.querySelectorAll<HTMLElement>(".btn-delete,[data-confirm]");
+ confirmEls.forEach(el => {
+   el.addEventListener("click", evt => {
+     const msg =
+       el.dataset.confirmMessage ??
+       "Are you sure you want to delete this item? This action cannot be undone.";
+     if (!window.confirm(msg)) evt.preventDefault();
+   });
+ });
+
+ /* ------------------------------------------------------------ */
+ /*  Image-file preview                                          */
+ /* ------------------------------------------------------------ */
+
+ const fileInputs =
+   document.querySelectorAll<HTMLInputElement>('input[type="file"][accept*="image"]');
+ fileInputs.forEach(input =>
+   input.addEventListener("change", () => {
+     const previewId = input.dataset.preview ?? "imagePreview";
+     const container = document.getElementById(previewId);
+     if (!container) return;
+
+     container.innerHTML = "";
+
+     Array.from(input.files ?? [])
+       .slice(0, 5) // max 5 previews
+       .filter(file => file.type.startsWith("image/"))
+       .forEach(file => {
+         const reader = new FileReader();
+         reader.onload = e => {
+           const preview = document.createElement("div");
+           preview.className = "image-preview";
+
+           const img = document.createElement("img");
+           img.className = "img-thumbnail";
+           img.src = String(e.target?.result);
+
+           preview.appendChild(img);
+           container.appendChild(preview);
+         };
+         reader.readAsDataURL(file);
+       });
+   })
+ );
+
+ /* ------------------------------------------------------------ */
+ /*  “Urgent” shortcut for priority                              */
+ /* ------------------------------------------------------------ */
+
+ const urgentCb = document.getElementById("urgent") as HTMLInputElement | null;
+ const prioritySel = document.getElementById("priority") as HTMLSelectElement | null;
+ if (urgentCb && prioritySel) {
+   urgentCb.addEventListener("change", () => {
+     if (urgentCb.checked) {
+       prioritySel.value = "high";
+       prioritySel.disabled = true;
+     } else {
+       prioritySel.disabled = false;
+     }
+   });
+ }
+
+ /* ------------------------------------------------------------ */
+ /*  Current-year footer                                         */
+ /* ------------------------------------------------------------ */
+
+ const year = String(new Date().getFullYear());
+ document
+   .querySelectorAll<HTMLElement>(".current-year")
+   .forEach(el => { el.textContent = year; });
 });
