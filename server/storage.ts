@@ -2141,4 +2141,4 @@ else if (process.env.DATABASE_URL) {
   console.log('Using in-memory storage');
   storage = new MemStorage();
 }
-export const storage: IStorage = sqliteStorage;
+export { storage };
