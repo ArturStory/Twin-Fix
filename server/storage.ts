@@ -17,6 +17,7 @@ import { neon, neonConfig } from '@neondatabase/serverless';
 import { Pool } from 'pg';
 import session from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
+import { sqliteStorage } from './sqlite-storage';
 import createMemoryStore from 'memorystore';
 
 // Interface for storage operations
@@ -2140,5 +2141,4 @@ else if (process.env.DATABASE_URL) {
   console.log('Using in-memory storage');
   storage = new MemStorage();
 }
-
-export { storage };
+export const storage: IStorage = sqliteStorage;
